@@ -19,11 +19,11 @@ pub fn build(b: *std.Build) void {
     btree_zig.linkLibC();
 
     btree_zig.addCSourceFiles(.{
-        .root = dep_btree_c.path(""),
+        .root = dep_btree_c.path("."),
         .files = &.{"btree.c"},
     });
 
-    btree_zig.installHeadersDirectory(dep_btree_c.path(""), "", .{
+    btree_zig.installHeadersDirectory(dep_btree_c.path("."), ".", .{
         .include_extensions = &.{"btree.h"},
     });
 
@@ -32,7 +32,7 @@ pub fn build(b: *std.Build) void {
     });
 
     // Include header files from btree.c lib
-    module.addIncludePath(dep_btree_c.path(""));
+    module.addIncludePath(dep_btree_c.path("."));
 
     b.installArtifact(btree_zig);
 
