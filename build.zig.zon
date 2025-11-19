@@ -1,6 +1,5 @@
 .{
-    .name = .btree_zig,
-    .fingerprint = 0x637b5357ead3171d,
+    .name = "btree-zig",
     .version = "0.0.1",
     .dependencies = .{
         .btree_c = .{
