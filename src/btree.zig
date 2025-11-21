@@ -16,7 +16,7 @@ pub fn Btree(comptime T: type, comptime Context: type) type {
             context: ?*Context,
         ) Self {
             const cb = struct {
-                fn comp(a: ?*const anyopaque, b: ?*const anyopaque, ctx: ?*anyopaque) callconv(.C) c_int {
+                fn comp(a: ?*const anyopaque, b: ?*const anyopaque, ctx: ?*anyopaque) callconv(.c) c_int {
                     return compare(@ptrCast(@alignCast(@constCast(a))), @ptrCast(@alignCast(@constCast(b))), @ptrCast(@alignCast(ctx)));
                 }
             };
@@ -76,7 +76,7 @@ pub fn Btree(comptime T: type, comptime Context: type) type {
             comptime iter: fn (a: *T, context: ?*ContextType) bool,
         ) bool {
             const cb = struct {
-                fn iterator(a: ?*const anyopaque, ctx: ?*anyopaque) callconv(.C) bool {
+                fn iterator(a: ?*const anyopaque, ctx: ?*anyopaque) callconv(.c) bool {
                     return iter(@ptrCast(@alignCast(@constCast(a))), @ptrCast(@alignCast(ctx)));
                 }
             };
@@ -92,7 +92,7 @@ pub fn Btree(comptime T: type, comptime Context: type) type {
             comptime iter: fn (a: *T, context: ?*ContextType) bool,
         ) bool {
             const cb = struct {
-                fn iterator(a: ?*const anyopaque, ctx: ?*anyopaque) callconv(.C) bool {
+                fn iterator(a: ?*const anyopaque, ctx: ?*anyopaque) callconv(.c) bool {
                     return iter(@ptrCast(@alignCast(@constCast(a))), @ptrCast(@alignCast(ctx)));
                 }
             };
@@ -285,6 +285,8 @@ test "btree get" {
 }
 
 test "btree ascend" {
+    const allocator = std.testing.allocator;
+
     const cString = @cImport({
         @cInclude("string.h");
     });
@@ -301,7 +303,7 @@ test "btree ascend" {
         }
 
         pub fn iter(a: *User, ctx: ?*std.ArrayList(u8)) bool {
-            ctx.?.append(a.id) catch unreachable;
+            ctx.?.append(allocator, a.id) catch unreachable;
             return true;
         }
     };
@@ -317,8 +319,8 @@ test "btree ascend" {
     _ = btree.set(&user2);
     _ = btree.set(&user3);
 
-    var ctx = std.ArrayList(u8).init(std.testing.allocator);
-    defer ctx.deinit();
+    var ctx = try std.ArrayList(u8).initCapacity(allocator, 0);
+    defer ctx.deinit(allocator);
 
     _ = btree.ascend(std.ArrayList(u8), &ctx, null, cb.iter);
 
@@ -326,6 +328,8 @@ test "btree ascend" {
 }
 
 test "iterator" {
+    const allocator = std.testing.allocator;
+
     const cString = @cImport({
         @cInclude("string.h");
     });
@@ -342,7 +346,7 @@ test "iterator" {
         }
 
         pub fn iter(a: *User, ctx: ?*std.ArrayList(u8)) bool {
-            ctx.?.append(a.id) catch unreachable;
+            ctx.?.append(allocator, a.id) catch unreachable;
             return true;
         }
     };
@@ -358,8 +362,8 @@ test "iterator" {
     _ = btree.set(&user2);
     _ = btree.set(&user3);
 
-    var ctx = std.ArrayList(u8).init(std.testing.allocator);
-    defer ctx.deinit();
+    var ctx = try std.ArrayList(u8).initCapacity(allocator, 0);
+    defer ctx.deinit(allocator);
 
     _ = btree.ascend(std.ArrayList(u8), &ctx, null, cb.iter);
 
