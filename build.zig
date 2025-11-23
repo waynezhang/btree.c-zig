@@ -16,6 +16,7 @@ pub fn build(b: *std.Build) void {
             .root_source_file = b.path("src/btree.zig"),
             .target = target,
             .optimize = optimize,
+            .sanitize_c = .off,
         }),
     });
 
