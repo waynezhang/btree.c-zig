@@ -9,46 +9,41 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    const btree_zig = b.addLibrary(.{
-        .name = "btree_zig",
-        .linkage = .static,
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("src/btree.zig"),
-            .target = target,
-            .optimize = optimize,
-            .sanitize_c = .off,
-        }),
+    // The module carries the C sources, headers and libc, so importing it is enough.
+    const module = b.addModule("btree_c_zig", .{
+        .root_source_file = b.path("src/btree.zig"),
+        .target = target,
+        .optimize = optimize,
+        .link_libc = true,
+        .sanitize_c = .off,
     });
+    const translate_c = b.addTranslateC(.{
+        .root_source_file = b.path("src/c.h"),
+        .target = target,
+        .optimize = optimize,
+    });
+    translate_c.addIncludePath(dep_btree_c.path(""));
+    module.addImport("c", translate_c.createModule());
 
-    btree_zig.linkLibC();
-
-    btree_zig.addCSourceFiles(.{
+    module.addIncludePath(dep_btree_c.path(""));
+    module.addCSourceFiles(.{
         .root = dep_btree_c.path(""),
         .files = &.{"btree.c"},
     });
 
+    const btree_zig = b.addLibrary(.{
+        .name = "btree_zig",
+        .linkage = .static,
+        .root_module = module,
+    });
     btree_zig.installHeadersDirectory(dep_btree_c.path(""), "", .{
         .include_extensions = &.{"btree.h"},
     });
-
-    const module = b.addModule("btree_c_zig", .{
-        .root_source_file = b.path("src/btree.zig"),
-    });
-
-    // Include header files from btree.c lib
-    module.addIncludePath(dep_btree_c.path(""));
-
     b.installArtifact(btree_zig);
 
     const btree_zig_tests = b.addTest(.{
-        .root_module = b.createModule(.{
-            .root_source_file = b.path("src/btree.zig"),
-            .target = target,
-            .optimize = optimize,
-        }),
+        .root_module = module,
     });
-
-    btree_zig_tests.linkLibrary(btree_zig);
 
     const run_btree_zig_unit_tests = b.addRunArtifact(btree_zig_tests);
 

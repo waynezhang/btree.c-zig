@@ -1,8 +1,6 @@
 const std = @import("std");
 
-const c = @cImport({
-    @cInclude("btree.h");
-});
+const c = @import("c");
 
 pub fn Btree(comptime T: type, comptime Context: type) type {
     return struct {
@@ -195,10 +193,6 @@ pub fn Btree(comptime T: type, comptime Context: type) type {
 }
 
 test "btree init" {
-    const cString = @cImport({
-        @cInclude("string.h");
-    });
-
     const User = struct {
         name: []const u8,
     };
@@ -206,7 +200,7 @@ test "btree init" {
     const cb = struct {
         pub fn compare(a: *User, b: *User, ctx: ?*void) c_int {
             _ = ctx;
-            return cString.strncmp(a.name.ptr, b.name.ptr, a.name.len);
+            return c.strncmp(a.name.ptr, b.name.ptr, a.name.len);
         }
     };
 
@@ -215,10 +209,6 @@ test "btree init" {
 }
 
 test "btree set" {
-    const cString = @cImport({
-        @cInclude("string.h");
-    });
-
     const User = struct {
         name: []const u8,
     };
@@ -231,7 +221,7 @@ test "btree set" {
         pub fn compare(a: *User, b: *User, ctx: ?*Context) c_int {
             ctx.?.key = "updated";
 
-            return cString.strncmp(a.name.ptr, b.name.ptr, a.name.len);
+            return c.strncmp(a.name.ptr, b.name.ptr, a.name.len);
         }
     };
 
@@ -253,10 +243,6 @@ test "btree set" {
 }
 
 test "btree get" {
-    const cString = @cImport({
-        @cInclude("string.h");
-    });
-
     const User = struct {
         name: []const u8,
     };
@@ -265,7 +251,7 @@ test "btree get" {
         pub fn compare(a: *User, b: *User, ctx: ?*void) c_int {
             _ = ctx;
 
-            return cString.strncmp(a.name.ptr, b.name.ptr, a.name.len);
+            return c.strncmp(a.name.ptr, b.name.ptr, a.name.len);
         }
     };
 
@@ -287,10 +273,6 @@ test "btree get" {
 test "btree ascend" {
     const allocator = std.testing.allocator;
 
-    const cString = @cImport({
-        @cInclude("string.h");
-    });
-
     const User = struct {
         id: u8,
         name: []const u8,
@@ -299,7 +281,7 @@ test "btree ascend" {
     const cb = struct {
         pub fn compare(a: *User, b: *User, ctx: ?*void) c_int {
             _ = ctx;
-            return cString.strncmp(a.name.ptr, b.name.ptr, a.name.len);
+            return c.strncmp(a.name.ptr, b.name.ptr, a.name.len);
         }
 
         pub fn iter(a: *User, ctx: ?*std.ArrayList(u8)) bool {
@@ -330,10 +312,6 @@ test "btree ascend" {
 test "iterator" {
     const allocator = std.testing.allocator;
 
-    const cString = @cImport({
-        @cInclude("string.h");
-    });
-
     const User = struct {
         id: u8,
         name: []const u8,
@@ -342,7 +320,7 @@ test "iterator" {
     const cb = struct {
         pub fn compare(a: *User, b: *User, ctx: ?*void) c_int {
             _ = ctx;
-            return cString.strncmp(a.name.ptr, b.name.ptr, a.name.len);
+            return c.strncmp(a.name.ptr, b.name.ptr, a.name.len);
         }
 
         pub fn iter(a: *User, ctx: ?*std.ArrayList(u8)) bool {
